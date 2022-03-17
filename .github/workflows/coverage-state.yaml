@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           curl "https://{GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"pending\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"in progress — This check has started... \",\"context\": \"code cov\"}"
-        with:
+        env:
           GIT_TOKEN: ${{ secrets.token }}
           GIT_USER:  ${{ secrets.username }}
           ORG_NAME:  ${{ inputs.organization }}
