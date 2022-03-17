@@ -1,0 +1,41 @@
+name: Reusable Code Coverage Status For A Commit
+
+on:
+  workflow_call:
+    inputs:
+      username:
+        required: true
+        type:     string
+      organization:
+        required: true
+        type:     string
+      project:
+        required: true
+        type:     string
+      commit:
+        required: true
+        type:     string
+      runid:
+        required: true
+        type:     string
+      pullreq:
+        required: true
+        type:     string
+    secrets:
+      token:
+        required: true
+jobs:
+  coverage_status:
+    name: Code Coverage Status Update
+    runs-on: ubuntu-latest
+    steps:
+      - run:|
+          curl "https://{GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"pending\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"in progress — This check has started... \",\"context\": \"code cov\"}"
+        with:
+          GIT_TOKEN: ${{ secrets.token }}
+          GIT_USER:  ${{ inputs.username }}
+          ORG_NAME:  ${{ inputs.organization }}
+          PROJECT_NAME: ${{ inputs.project }}
+          COMMIT_SHA:   ${{ inputs.commit }}
+          RUN_ID:       ${{ inputs.runid }}
+          PULL_NUMBER:  ${{ inputs.pullreq }}
