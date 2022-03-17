@@ -31,7 +31,7 @@ on:
       key:
         required: true
 jobs:
-  build:
+  check-coverage:
     runs-on: ubuntu-latest
 
     steps:
