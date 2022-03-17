@@ -1,0 +1,76 @@
+name: Reusable Code Coverage Check For A Commit
+
+on:
+  workflow_call:
+    inputs:
+      organization:
+        required: true
+        type:     string
+      project:
+        required: true
+        type:     string
+      commit:
+        required: true
+        type:     string
+      runid:
+        required: true
+        type:     string
+      pullreq:
+        required: true
+        type:     string
+      region:
+        required: true
+        type:     string
+    secrets:
+      username:
+        required: true
+      token:
+        required: true
+      keyid:
+        required: true
+      key:
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Coverage Status Check
+        shell: bash
+        run: |
+          set -x
+          cd ${PROJECT_NAME}
+          PROJECT_NAME=${PROJECT_NAME}
+          total=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+          if (( $(echo "$total <= 50" | bc -l) )) ; then
+            COLOR=red
+          elif (( $(echo "$total > 80" | bc -l) )); then
+            COLOR=green
+          else
+            COLOR=orange
+          fi
+          curl "https://img.shields.io/badge/coverage-$total%25-$COLOR" > badge.svg
+          aws s3 cp --acl public-read --cache-control no-cache badge.svg s3://appaegis-codecoverage/${PROJECT_NAME}/badge.svg
+          exists=$(aws s3 ls s3://appaegis-codecoverage/${PROJECT_NAME}/coverage.out || true)
+          if [ -z "$exists" ]; then
+            prev_total=0
+          else
+            aws s3 cp s3://appaegis-codecoverage/${PROJECT_NAME}/coverage.out coverage_prev.out
+            prev_total=`go tool cover -func=coverage_prev.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+          fi
+          aws s3 cp ./coverage.out s3://appaegis-codecoverage/${PROJECT_NAME}/coverage.out
+          echo "total cov: $total"
+          echo "prev build cov: $prev_total"
+          (( $(echo "$total >= $prev_total" | bc -l) )) && STATE=success || STATE=failure
+          curl "https://${GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"${STATE}\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"${total}%\",\"context\": \"code cov\"}"
+        env:
+          GIT_TOKEN: ${{ secrets.token }}
+          GIT_USER: ${{ secrets.username }}
+          PROJECT_NAME: ${{ inputs.project }}
+          ORG_NAME: ${{ inputs.organization }}
+          COMMIT_SHA: ${{ inputs.commit }}
+          PULL_NUMBER: ${{ inputs.pullreq }}
+          RUN_ID: ${{ inputs.runid }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.keyid }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.key }}
+          aws-region: ${{ inputs.region }}
