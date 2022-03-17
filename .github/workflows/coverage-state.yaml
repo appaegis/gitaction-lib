@@ -24,9 +24,9 @@ on:
       token:
         required: true
 jobs:
-  coverage_status:
-    name: Code Coverage Status Update
+  build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Coverage Status Update
         run:|
