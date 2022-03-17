@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           set -x
-          cd ${PROJECT_NAME}
+          pwd && cd ${PROJECT_NAME}
           PROJECT_NAME=${PROJECT_NAME}
           total=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
           if (( $(echo "$total <= 50" | bc -l) )) ; then
