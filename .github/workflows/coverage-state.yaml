@@ -1,5 +1,4 @@
 name: Reusable Code Coverage Status For A Commit
-
 on:
   workflow_call:
     inputs:
