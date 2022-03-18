@@ -49,7 +49,6 @@ jobs:
         run: |
           set -x
           PROJECT_NAME=${PROJECT_NAME}
-          ls -la
           total=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
           if (( $(echo "$total <= 50" | bc -l) )) ; then
             COLOR=red

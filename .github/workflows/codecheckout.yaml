@@ -1,0 +1,58 @@
+name: Reusable Code Checkout With Golang-common and Submodule
+
+on:
+  workflow_call:
+    inputs:
+      organization:
+        required: true
+        type:     string
+      project:
+        required: true
+        type:     string
+      runid:
+        required: true
+        type:     string
+    secrets:
+      username:
+        required: true
+      token:
+        required: true
+      sshkey:
+        required: true
+jobs:
+  code-checkout:
+    runs-on: ubuntu-latest
+    steps:
+            # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          token: ${{ secrets.token }}
+          path: ${{ inputs.project }}
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16.1' # The Go version to download (if necessary) and use.
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_HEAD_REF#refs/heads/})"
+        id: extract_branch
+      - name: Extract dest branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_BASE_REF#refs/heads/})"
+        id: extract_dest_branch
+      - uses: actions/checkout@v3
+        with:
+          repository : appaegis/golang-common
+          ref        : ${{ steps.extract_dest_branch.outputs.branch }}
+          path       : golang-common
+          ssh-key : ${{ secrets.sshkey }}
+          fetch-depth: 0
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
+          path: ${{ inputs.project }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: golang-common-artifacts-${{ inputs.runid }}
+          path: golang-common
