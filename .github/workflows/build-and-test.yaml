@@ -54,7 +54,7 @@ jobs:
         working-directory: ${{ inputs.project }}
         run:  make build
       - name: run unit testing
-        workking-directory: ${{ inputs.project }}
+        working-directory: ${{ inputs.project }}
         run: make test
       - uses: actions/upload-artifact@v3
         with:
