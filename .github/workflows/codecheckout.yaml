@@ -3,9 +3,6 @@ name: Reusable Code Checkout With Golang-common and Submodule
 on:
   workflow_call:
     inputs:
-      organization:
-        required: true
-        type:     string
       project:
         required: true
         type:     string

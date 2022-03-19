@@ -3,9 +3,6 @@ name: Running Build And Test
 on:
   workflow_call:
     inputs:
-      organization:
-        required: true
-        type:     string
       project:
         required: true
         type:     string
@@ -45,7 +42,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.keyid }}
           aws-secret-access-key: ${{ secrets.key }}
-          aws-region: us-east-1
+          aws-region: ${{ inputs.region }}
       - name: Build, tag, and push image to Amazon ECR
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.keyid }}
