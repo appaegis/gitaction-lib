@@ -30,7 +30,7 @@ jobs:
         with:
           name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
           path: ${{ inputs.project }}
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: golang-common-artifacts-${{ inputs.runid }}
           path: golang-common
