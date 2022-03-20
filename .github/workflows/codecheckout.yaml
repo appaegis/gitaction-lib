@@ -27,10 +27,6 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.token }}
           path: ${{ inputs.project }}
-      - name: Extract branch name
-        shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_HEAD_REF#refs/heads/})"
-        id: extract_branch
       - name: Extract dest branch name
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_BASE_REF#refs/heads/})"
