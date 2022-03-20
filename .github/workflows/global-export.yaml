@@ -1,0 +1,31 @@
+name: Common Global Variable
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: true
+        type:     string
+      region:
+        required: true
+        type:     string
+    outputs:
+      project:
+        description: "Repository Name"
+        value: ${{ jobs.export_job.outputs.project }}
+      region:
+        description: "AWS Region"
+        value: ${{ jobs.export_job.outputs.region }}
+jobs:
+  export_job:
+    runs-on: ubuntu-latest
+    outputs:
+      project: ${{ steps.get-repo-name.outputs.project }}
+      region:  ${{ inputs.region }}
+
+    steps:
+      - id: get-repo-name
+        shell: base
+        run: |
+          project=$(echo ${{ inputs.repository }} | cut -d '/' -f2)
+          echo "::set-output name=project::$project"
