@@ -7,8 +7,8 @@ on:
         required: true
         type:     string
       region:
-        required: true
         type:     string
+        default:  us-east-1
     outputs:
       project:
         description: "Repository Name"
