@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - id: get-repo-name
-        shell: base
+        shell: bash
         run: |
           project=$(echo ${{ inputs.repository }} | cut -d '/' -f2)
           echo "::set-output name=project::$project"
