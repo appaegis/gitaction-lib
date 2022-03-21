@@ -56,7 +56,7 @@ jobs:
         run:  make build
       - name: run unit testing
         working-directory: ${{ inputs.project }}
-        run: export PATH=$PATH:$GOPATH/bin && make test
+        run: echo $PATH && echo $GOPATH && export PATH=$PATH:$GOPATH/bin && make test
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.project }}-artifacts-${{ github.run_id }}
