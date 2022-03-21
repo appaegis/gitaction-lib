@@ -57,7 +57,6 @@ jobs:
       - name: run unit testing
         working-directory: ${{ inputs.project }}
         run: |
-          make debug.print-vars || true
           make test
       - uses: actions/upload-artifact@v3
         with:
