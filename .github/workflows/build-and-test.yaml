@@ -57,7 +57,8 @@ jobs:
       - name: run unit testing
         working-directory: ${{ inputs.project }}
         run: |
-          make test
+          make go.prepare
+          find / -name gofumpt -print 2>/dev/null || true
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.project }}-artifacts-${{ github.run_id }}
