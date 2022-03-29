@@ -21,6 +21,10 @@ on:
       region:
         required: true
         type:     string
+      subproj:
+        required: false
+        type:     string
+        default:  ""
     secrets:
       username:
         required: true
@@ -55,6 +59,14 @@ jobs:
         run: |
           set -x
           PROJECT_NAME=${PROJECT_NAME}
+          badge="badge"
+          coverage_name="coverage"
+          if [ -n ${SUBDIR} ];
+          then
+              cd ${SUBDIR}
+              badge=${badge}-${SUBDIR}
+              coverage_name=${coverage_name}-${SUBDIR}
+          fi
           total=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
           if (( $(echo "$total <= 50" | bc -l) )) ; then
             COLOR=red
@@ -64,20 +76,21 @@ jobs:
             COLOR=orange
           fi
           curl "https://img.shields.io/badge/coverage-$total%25-$COLOR" > badge.svg
-          aws s3 cp --acl public-read --cache-control no-cache badge.svg s3://appaegis-codecoverage/${PROJECT_NAME}/badge.svg
-          exists=$(aws s3 ls s3://appaegis-codecoverage/${PROJECT_NAME}/coverage.out || true)
+          aws s3 cp --acl public-read --cache-control no-cache badge.svg s3://appaegis-codecoverage/${PROJECT_NAME}/${badge}.svg
+          exists=$(aws s3 ls s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}.out || true)
           if [ -z "$exists" ]; then
             prev_total=0
           else
-            aws s3 cp s3://appaegis-codecoverage/${PROJECT_NAME}/coverage.out coverage_prev.out
+            aws s3 cp s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}.out coverage_prev.out
             prev_total=`go tool cover -func=coverage_prev.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
           fi
-          aws s3 cp ./coverage.out s3://appaegis-codecoverage/${PROJECT_NAME}/coverage.out
+          aws s3 cp ./coverage.out s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}.out
           echo "total cov: $total"
           echo "prev build cov: $prev_total"
           (( $(echo "$total >= $prev_total" | bc -l) )) && STATE=success || STATE=failure
-          curl "https://${GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"${STATE}\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"${total}%\",\"context\": \"code cov\"}"
+          curl "https://${GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"${STATE}\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"${total}%\",\"context\": \"${SUBDIR} code cov\"}"
         env:
+          SUBDIR:    ${{ inputs.subproj }}
           GIT_TOKEN: ${{ secrets.token }}
           GIT_USER: ${{ secrets.username }}
           PROJECT_NAME: ${{ inputs.project }}

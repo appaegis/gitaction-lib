@@ -17,6 +17,10 @@ on:
       pullreq:
         required: true
         type:     string
+      subproj:
+        required: false
+        type:     string
+        default:  ""
     secrets:
       username:
         required: true
@@ -30,8 +34,9 @@ jobs:
       - name: Coverage Status Update
         shell: bash
         run: |
-          curl "https://{GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"pending\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"in progress — This check has started... \",\"context\": \"code cov\"}"
+          curl "https://{GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"pending\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"in progress — This check has started... \",\"context\": \"${SUB_PROJ} code cov\"}"
         env:
+          SUB_PROJ: ${{ inputs.subproj }}
           GIT_TOKEN: ${{ secrets.token }}
           GIT_USER:  ${{ secrets.username }}
           ORG_NAME:  ${{ inputs.organization }}
