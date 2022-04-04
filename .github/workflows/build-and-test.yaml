@@ -31,7 +31,7 @@ jobs:
         with:
           name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
           path: ${{ inputs.project }}
-      - name: Download ${{ inputs.project }}
+      - name: Download golang-common
         uses: actions/download-artifact@v3
         if: inputs.project != 'golang-common'
         with:
