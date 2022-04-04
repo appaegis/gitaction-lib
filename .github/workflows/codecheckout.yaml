@@ -44,7 +44,7 @@ jobs:
           name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
           path: ${{ inputs.project }}
       - uses: actions/upload-artifact@v2
-        if: ${{ inputs.project }} != "golang-common"
+        if: ${{ inputs.project }} != golang-common
         with:
           name: golang-common-artifacts-${{ inputs.runid }}
           path: golang-common
