@@ -26,12 +26,14 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download ${{ inputs.project }}
+        uses: actions/download-artifact@v3
         with:
           name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
           path: ${{ inputs.project }}
-      - uses: actions/download-artifact@v3
-        if: ${{ inputs.project }} != "golang-common"
+      - name: Download ${{ inputs.project }}
+        uses: actions/download-artifact@v3
+        if: inputs.project != 'golang-common'
         with:
           name: golang-common-artifacts-${{ inputs.runid }}
           path: golang-common
