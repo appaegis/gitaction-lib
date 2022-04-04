@@ -31,8 +31,8 @@ jobs:
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_BASE_REF#refs/heads/})"
         id: extract_dest_branch
-      - name: check out golang-common library ${{ inputs.project }}
-        if: ${{ inputs.project }} != golang-common
+      - name: check out golang-common library
+        if: inputs.project != 'golang-common'
         uses: actions/checkout@v3
         with:
           repository : appaegis/golang-common
