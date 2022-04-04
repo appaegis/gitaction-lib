@@ -58,6 +58,9 @@ jobs:
         working-directory: ${{ inputs.project }}
         run:  make build
       - name: run unit testing
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.keyid }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.key }}
         working-directory: ${{ inputs.project }}
         run: |
           make test
