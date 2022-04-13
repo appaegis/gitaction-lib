@@ -76,11 +76,13 @@ jobs:
             aws s3 cp s3://appaegis-codecoverage/${PROJECT_NAME}/coverage.out coverage_result_prev
             prev_total=`cat coverage_result_prev`
           fi
-          aws s3 cp ./coverage.out s3://appaegis-codecoverage/${PROJECT_NAME}/coverage_result
           echo "total cov: $total"
           echo "prev build cov: $prev_total"
           (( $(echo "$total >= $prev_total" | bc -l) )) && STATE=success || STATE=failure
           curl "https://${GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"${STATE}\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"${total}%\",\"context\": \"code cov\"}"
+          if [ "$STATE" == "success" ]; then
+            aws s3 cp coverage_result s3://appaegis-codecoverage/${PROJECT_NAME}/coverage_result
+          fi
         env:
           GIT_TOKEN: ${{ secrets.token }}
           GIT_USER: ${{ secrets.username }}
