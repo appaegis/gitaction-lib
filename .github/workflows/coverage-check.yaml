@@ -73,7 +73,7 @@ jobs:
           if [ -z "$exists" ]; then
             prev_total=0
           else
-            aws s3 cp s3://appaegis-codecoverage/${PROJECT_NAME}/coverage.out coverage_result_prev
+            aws s3 cp s3://appaegis-codecoverage/${PROJECT_NAME}/coverage_result coverage_result_prev
             prev_total=`cat coverage_result_prev`
           fi
           echo "total cov: $total"
