@@ -5,19 +5,19 @@ on:
     inputs:
       organization:
         required: true
-        type:     string
+        type: string
       project:
         required: true
-        type:     string
+        type: string
       commit:
         required: true
-        type:     string
+        type: string
       runid:
         required: true
-        type:     string
+        type: string
       pullreq:
         required: true
-        type:     string
+        type: string
       region:
         required: true
         type:     string
@@ -39,11 +39,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download ${{ inputs.project }}
+        uses: actions/download-artifact@v3
         with:
           name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
           path: ${{ inputs.project }}
-      - uses: actions/download-artifact@v3
+      - name: Download golang-common
+        uses: actions/download-artifact@v3
+        if: inputs.project != 'golang-common'
         with:
           name: golang-common-artifacts-${{ inputs.runid }}
           path: golang-common
@@ -60,13 +63,14 @@ jobs:
           set -x
           PROJECT_NAME=${PROJECT_NAME}
           badge="badge"
-          coverage_name="coverage"
+          coverage_name="coverage_result"
           if [ -n ${SUBDIR} ];
           then
               cd ${SUBDIR}
               badge=${badge}-${SUBDIR}
               coverage_name=${coverage_name}-${SUBDIR}
           fi
+          go mod edit -replace github.com/appaegis/golang-common=../golang-common || true
           total=`go tool cover -func=coverage.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
           if (( $(echo "$total <= 50" | bc -l) )) ; then
             COLOR=red
@@ -75,20 +79,23 @@ jobs:
           else
             COLOR=orange
           fi
-          curl "https://img.shields.io/badge/coverage-$total%25-$COLOR" > badge.svg
+          curl "https://img.shields.io/badge/coverage-$total%25-$COLOR" > ${badge}.svg
           aws s3 cp --acl public-read --cache-control no-cache badge.svg s3://appaegis-codecoverage/${PROJECT_NAME}/${badge}.svg
-          exists=$(aws s3 ls s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}.out || true)
+          echo "$total" > ${coverage_name}
+          exists=$(aws s3 ls s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name} || true)
           if [ -z "$exists" ]; then
             prev_total=0
           else
-            aws s3 cp s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}.out coverage_prev.out
-            prev_total=`go tool cover -func=coverage_prev.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+            aws s3 cp s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name} coverage_result_prev
+            prev_total=`cat coverage_result_prev`
           fi
-          aws s3 cp ./coverage.out s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}.out
           echo "total cov: $total"
           echo "prev build cov: $prev_total"
           (( $(echo "$total >= $prev_total" | bc -l) )) && STATE=success || STATE=failure
           curl "https://${GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"${STATE}\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"${total}%\",\"context\": \"${SUBDIR} code cov\"}"
+          if [ "$STATE" == "success" ]; then
+            aws s3 cp {coverage_name} s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}
+          fi
         env:
           SUBDIR:    ${{ inputs.subproj }}
           GIT_TOKEN: ${{ secrets.token }}

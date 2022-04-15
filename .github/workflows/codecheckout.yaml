@@ -21,7 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
             # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - name: Checkout the ${{ inputs.project }}
+        uses: actions/checkout@v3
         with:
           submodules: recursive
           fetch-depth: 0
@@ -31,18 +32,23 @@ jobs:
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_BASE_REF#refs/heads/})"
         id: extract_dest_branch
-      - uses: actions/checkout@v3
+      - name: check out golang-common library
+        if: inputs.project != 'golang-common'
+        uses: actions/checkout@v3
         with:
           repository : appaegis/golang-common
           ref        : ${{ steps.extract_dest_branch.outputs.branch }}
           path       : golang-common
           ssh-key : ${{ secrets.sshkey }}
           fetch-depth: 0
-      - uses: actions/upload-artifact@v2
+      - name: Upload ${{ inputs.project }}
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
           path: ${{ inputs.project }}
-      - uses: actions/upload-artifact@v2
+      - name: Upload golang-common
+        if: inputs.project != 'golang-common'
+        uses: actions/upload-artifact@v2
         with:
           name: golang-common-artifacts-${{ inputs.runid }}
           path: golang-common

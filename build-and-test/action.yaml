@@ -1,0 +1,66 @@
+name: Running Build And Test
+
+inputs:
+  project:
+    required: true
+    description: ""
+  runid:
+    required: true
+    description: ""
+  region:
+    required: true
+    description: ""
+  username:
+    required: true
+    description: ""
+  token:
+    required: true
+    description: ""
+  keyid:
+    required: true
+    description: ""
+  key:
+    required: true
+    description: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
+        path: ${{ inputs.project }}
+    - uses: actions/download-artifact@v3
+      with:
+        name: golang-common-artifacts-${{ inputs.runid }}
+        path: golang-common
+    - name: Extract branch name
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_HEAD_REF#refs/heads/})"
+      id: extract_branch
+    - uses: actions/setup-go@v2
+      with:
+        go-version: "1.17.6" # The Go version to download (if necessary) and use.
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.keyid }}
+        aws-secret-access-key: ${{ inputs.key }}
+        aws-region: ${{ inputs.region }}
+    - name: Build, tag, and push image to Amazon ECR
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.keyid }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.key }}
+        BRANCH: ${{ steps.extract_branch.outputs.branch }}
+      working-directory: ${{ inputs.project }}
+      run: make build
+      shell: bash
+    - name: run unit testing
+      working-directory: ${{ inputs.project }}
+      run: |
+        make test
+      shell: bash
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.project }}-artifacts-${{ github.run_id }}
+        path: ${{ inputs.project }}

@@ -26,11 +26,14 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download ${{ inputs.project }}
+        uses: actions/download-artifact@v3
         with:
           name: ${{ inputs.project }}-artifacts-${{ inputs.runid }}
           path: ${{ inputs.project }}
-      - uses: actions/download-artifact@v3
+      - name: Download golang-common
+        uses: actions/download-artifact@v3
+        if: inputs.project != 'golang-common'
         with:
           name: golang-common-artifacts-${{ inputs.runid }}
           path: golang-common
@@ -55,6 +58,9 @@ jobs:
         working-directory: ${{ inputs.project }}
         run:  make build
       - name: run unit testing
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.keyid }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.key }}
         working-directory: ${{ inputs.project }}
         run: |
           make test
