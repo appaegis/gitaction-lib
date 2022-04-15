@@ -94,7 +94,7 @@ jobs:
           (( $(echo "$total >= $prev_total" | bc -l) )) && STATE=success || STATE=failure
           curl "https://${GIT_USER}:${GIT_TOKEN}@api.github.com/repos/${ORG_NAME}/${PROJECT_NAME}/statuses/${COMMIT_SHA}" -d "{\"state\": \"${STATE}\",\"target_url\": \"https://github.com/${ORG_NAME}/${PROJECT_NAME}/pull/${PULL_NUMBER}/checks?check_run_id=${RUN_ID}\",\"description\": \"${total}%\",\"context\": \"${SUBDIR} code cov\"}"
           if [ "$STATE" == "success" ]; then
-            aws s3 cp {coverage_name} s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}
+            aws s3 cp ${coverage_name} s3://appaegis-codecoverage/${PROJECT_NAME}/${coverage_name}
           fi
         env:
           SUBDIR:    ${{ inputs.subproj }}
