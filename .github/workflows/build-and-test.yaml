@@ -69,7 +69,7 @@ jobs:
         run: |
           make test
       - uses: actions/upload-artifact@v3
-        if: input.copy == true
+        if: inputs.copy == true
         with:
           name: ${{ inputs.project }}-artifacts-${{ github.run_id }}
           path: ${{ inputs.project }}
